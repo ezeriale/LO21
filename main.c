@@ -20,27 +20,7 @@ typedef struct NoeudRegle {
     struct NoeudRegle* suivant;
 } NoeudRegle;
 
-typedef struct {
-    NoeudRegle* tete;
-} BC;
-
-// Fonctions pour le type abstrait Regle
-Regle creerRegle() {
-    Regle nouvelleRegle;
-    nouvelleRegle.prémisse = NULL;
-    return nouvelleRegle;
-}
-
-void ajouterProposition(NoeudProposition** prémisse, char nom, int valeur) {
-    NoeudProposition* nouveauNoeud = (NoeudProposition*)malloc(sizeof(NoeudProposition));
-    nouveauNoeud->nom = nom;
-    nouveauNoeud->valeur = valeur;
-    nouveauNoeud->suivant = NULL;
-
-    if (*prémisse == NULL) {
-        *prémisse = nouveauNoeud;
-    } else {
-        NoeudProposition* actuel = *prémisse;
+typeprémisse;
         while (actuel->suivant != NULL) {
             actuel = actuel->suivant;
         }
