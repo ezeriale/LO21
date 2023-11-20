@@ -58,7 +58,7 @@ int propositionDansPremisse(NoeudProposition* prémisse, char nom) {
         return 0;
     }
 
-    if (prémisse->nom == nom) {
+    if (premisse->nom == nom) {
         return 1;
     }
 
