@@ -1,193 +1,187 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-// Définition du type abstrait de données Regle
-typedef struct NoeudProposition {
-    char nom;
-    int valeur;
-    struct NoeudProposition* suivant;
-} NoeudProposition;
+// Structure pour une proposition
+typedef struct proposition {
+    char id;
+    bool valeur;
+    struct proposition* suiv;
+} proposition;
 
+// Structure pour une règle
+typedef struct regle {
+    proposition* premisse;
+    proposition* conclusion;
+    struct regle* suiv;
+} regle;
+
+// Structure pour la base de connaissances
 typedef struct {
-    NoeudProposition* prémisse;
-    char conclusionNom;
-    int conclusionValeur;
-} Regle;
+    regle* regles;
+} BC;
 
-// Définition du type abstrait de données BC (Base de Connaissances)
-typedef struct NoeudRegle {
-    Regle regle;
-    struct NoeudRegle* suivant;
-} NoeudRegle;
-
-typeprémisse;
-        while (actuel->suivant != NULL) {
-            actuel = actuel->suivant;
-        }
-        actuel->suivant = nouveauNoeud;
+// Fonction pour créer une nouvelle proposition
+proposition* creerProposition(char id, bool valeur) {
+    proposition* nouvelleProposition = (proposition*)malloc(sizeof(proposition));
+    if (nouvelleProposition != NULL) {
+        nouvelleProposition->id = id;
+        nouvelleProposition->valeur = valeur;
+        nouvelleProposition->suiv = NULL;
     }
+    return nouvelleProposition;
 }
 
-void creerConclusion(Regle* regle, char nom, int valeur) {
-    regle->conclusionNom = nom;
-    regle->conclusionValeur = valeur;
-}
-
-int propositionDansPremisse(NoeudProposition* prémisse, char nom) {
-    if (prémisse == NULL) {
-        return 0;
+// Fonction pour créer une nouvelle règle
+regle* creerRegle(proposition* premisse, proposition* conclusion) {
+    regle* nouvelleRegle = (regle*)malloc(sizeof(regle));
+    if (nouvelleRegle != NULL) {
+        nouvelleRegle->premisse = premisse;
+        nouvelleRegle->conclusion = conclusion;
+        nouvelleRegle->suiv = NULL;
     }
-
-    if (premisse->nom == nom) {
-        return 1;
-    }
-
-    return propositionDansPremisse(prémisse->suivant, nom);
+    return nouvelleRegle;
 }
 
-void supprimerProposition(NoeudProposition** prémisse, char nom) {
-    if (*prémisse == NULL) {
-        return;
-    }
-
-    if ((*prémisse)->nom == nom) {
-        NoeudProposition* temp = *prémisse;
-        *prémisse = (*prémisse)->suivant;
-        free(temp);
-        return;
-    }
-
-    supprimerProposition(&((*prémisse)->suivant), nom);
-}
-
-int premissesVide(NoeudProposition* prémisse) {
-    return prémisse == NULL;
-}
-
-char tetePremisse(NoeudProposition* prémisse) {
-    if (prémisse != NULL) {
-        return prémisse->nom;
-    }
-    return '\0';
-}
-
-char conclusionNom(Regle regle) {
-    return regle.conclusionNom;
-}
-
-int conclusionValeur(Regle regle) {
-    return regle.conclusionValeur;
-}
-
-// Fonctions pour le type abstrait BC
-BC creerBC() {
+// Fonction pour créer une nouvelle base de connaissances
+BC creerBC(regle* regles) {
     BC nouvelleBC;
-    nouvelleBC.tete = NULL;
+    nouvelleBC.regles = regles;
     return nouvelleBC;
 }
 
-void ajouterRegle(BC* baseConnaissances, Regle regle) {
-    NoeudRegle* nouveauNoeud = (NoeudRegle*)malloc(sizeof(NoeudRegle));
-    nouveauNoeud->regle = regle;
-    nouveauNoeud->suivant = NULL;
-
-    if (baseConnaissances->tete == NULL) {
-        baseConnaissances->tete = nouveauNoeud;
+// Fonction pour ajouter une proposition à une liste de propositions
+proposition* ajouterPropositionAListe(proposition* liste, char id, bool valeur) {
+    proposition* nouvelleProposition = creerProposition(id, valeur);
+    if (nouvelleProposition != NULL) {
+        nouvelleProposition->suiv = liste;
+        return nouvelleProposition;
     } else {
-        NoeudRegle* actuel = baseConnaissances->tete;
-        while (actuel->suivant != NULL) {
-            actuel = actuel->suivant;
+        return liste; // Retourner la liste inchangée en cas d'erreur
+    }
+}
+
+// Fonction pour afficher une proposition
+void afficherProposition(proposition* prop) {
+    if (prop != NULL) {
+        printf("%c %s", prop->id, prop->valeur ? "Vrai" : "Faux");
+        if (prop->suiv != NULL) {
+            printf(" ET ");
+            afficherProposition(prop->suiv);
+        } else {
+            printf("\n");
         }
-        actuel->suivant = nouveauNoeud;
     }
 }
 
-Regle teteBC(BC baseConnaissances) {
-    return baseConnaissances.tete->regle;
+// Fonction pour afficher une règle
+void afficherRegle(regle* r) {
+    if (r != NULL) {
+        printf("Regle :\n");
+        printf("  Premisse : ");
+        afficherProposition(r->premisse);
+        printf("  Conclusion : ");
+        afficherProposition(r->conclusion);
+        printf("\n");
+    }
 }
 
-// Fonctions pour le moteur d'inférence
-void appliquerRegle(BC baseConnaissances, NoeudProposition* faits, Regle regle, NoeudProposition** nouveauxFaits) {
-    NoeudProposition* actuel = regle.prémisse;
-    while (actuel != NULL) {
-        if (!propositionDansPremisse(faits, actuel->nom)) {
-            return; // La prémisse n'est pas satisfaite
+// Fonction pour libérer la mémoire d'une liste de propositions
+void libererListePropositions(proposition* prop) {
+    while (prop != NULL) {
+        proposition* suivant = prop->suiv;
+        free(prop);
+        prop = suivant;
+    }
+}
+
+// Fonction pour libérer la mémoire d'une règle
+void libererRegle(regle* r) {
+    if (r != NULL) {
+        libererListePropositions(r->premisse);
+        libererListePropositions(r->conclusion);
+        free(r);
+    }
+}
+
+// Fonction pour libérer la mémoire de la base de connaissances
+void libererBC(BC baseConnaissances) {
+    regle* current = baseConnaissances.regles;
+    while (current != NULL) {
+        regle* suivant = current->suiv;
+        libererRegle(current);
+        current = suivant;
+    }
+}
+
+// Fonction pour ajouter une règle à la base de connaissances
+BC ajouterRegleABase(BC baseConnaissances, regle* nouvelleRegle) {
+    regle* current = baseConnaissances.regles;
+    if (current == NULL) {
+        baseConnaissances.regles = nouvelleRegle;
+    } else {
+        while (current->suiv != NULL) {
+            current = current->suiv;
         }
-        actuel = actuel->suivant;
+        current->suiv = nouvelleRegle;
     }
-
-    // Si on arrive ici, toutes les propositions de la prémisse sont dans les faits
-    ajouterProposition(nouveauxFaits, regle.conclusionNom, regle.conclusionValeur);
-}
-
-void moteurInference(BC baseConnaissances, NoeudProposition* faits, NoeudProposition** nouveauxFaits) {
-    NoeudRegle* actuel = baseConnaissances.tete;
-    while (actuel != NULL) {
-        appliquerRegle(baseConnaissances, faits, actuel->regle, nouveauxFaits);
-        actuel = actuel->suivant;
-    }
-}
-
-// Fonctions utilitaires pour afficher les propositions et les faits
-void afficherPropositions(NoeudProposition* propositions) {
-    while (propositions != NULL) {
-        printf("%c%d ", propositions->nom, propositions->valeur);
-        propositions = propositions->suivant;
-    }
-    printf("\n");
+    return baseConnaissances;
 }
 
 int main() {
-    // Création de règles et de la base de connaissances
-    Regle regle1 = creerRegle();
-    ajouterProposition(&(regle1.prémisse), 'A', 1);
-    ajouterProposition(&(regle1.prémisse), 'B', 0);
-    creerConclusion(&regle1, 'D', 1);
+    BC baseConnaissances = creerBC(NULL);
+    int reglesValidees = 0;
 
-    Regle regle2 = creerRegle();
-    ajouterProposition(&(regle2.prémisse), 'D', 1);
-    ajouterProposition(&(regle2.prémisse), 'B', 0);
-    creerConclusion(&regle2, 'E', 0);
+    while (reglesValidees < 3) {
+        char choix;
+        printf("Que voulez-vous faire?\n");
+        printf("1. Ajouter une prémisse\n");
+        printf("2. Ajouter une conclusion\n");
+        printf("3. Valider la règle\n");
+        scanf(" %c", &choix);
 
-    Regle regleC1 = creerRegle();
-    ajouterProposition(&(regleC1.prémisse), 'D', 1);
-    creerConclusion(&regleC1, 'F', 1);
+        proposition* premisse = NULL;
+        proposition* conclusion = NULL;
 
-    BC baseConnaissances = creerBC();
-    ajouterRegle(&baseConnaissances, regle1);
-    ajouterRegle(&baseConnaissances, regle2);
-    ajouterRegle(&baseConnaissances, regleC1);
+        switch (choix) {
+            case '1':
+                printf("Entrez une prémisse (ex: A true): ");
+                char id1;
+                bool valeur1;
+                scanf(" %c %d", &id1, &valeur1);
+                premisse = ajouterPropositionAListe(premisse, id1, valeur1);
+                break;
 
-    // Affichage de la base de connaissances
-    printf("Base de connaissances :\n");
-    NoeudRegle* actuelBC = baseConnaissances.tete;
-    while (actuelBC != NULL) {
-        printf("Si ");
-        afficherPropositions(actuelBC->regle.prémisse);
-        printf("Alors %c%d\n", actuelBC->regle.conclusionNom, actuelBC->regle.conclusionValeur);
-        actuelBC = actuelBC->suivant;
+            case '2':
+                printf("Entrez une conclusion (ex: B false): ");
+                char id2;
+                bool valeur2;
+                scanf(" %c %d", &id2, &valeur2);
+                conclusion = ajouterPropositionAListe(conclusion, id2, valeur2);
+                break;
+
+            case '3':
+                if (premisse != NULL && conclusion != NULL) {
+                    regle* nouvelleRegle = creerRegle(premisse, conclusion);
+                    baseConnaissances = ajouterRegleABase(baseConnaissances, nouvelleRegle);
+                    reglesValidees++;
+                    printf("Regle ajoutée avec succès!\n");
+                } else {
+                    printf("Erreur: La règle doit avoir une prémisse et une conclusion.\n");
+                }
+                break;
+
+            default:
+                printf("Choix invalide. Veuillez entrer 1, 2 ou 3.\n");
+        }
     }
 
-    // Ajout de faits initiaux
-    NoeudProposition* faits = NULL;
-    ajouterProposition(&faits, 'A', 1);
-    ajouterProposition(&faits, 'B', 0);
-
-    // Affichage des faits initiaux
-    printf("\nFaits initiaux : ");
-    afficherPropositions(faits);
-
-    // Application du moteur d'inférence
-    NoeudProposition* nouveauxFaits = NULL;
-    moteurInference(baseConnaissances, faits, &nouveauxFaits);
-
-    // Affichage des nouveaux faits déduits
-    printf("\nNouveaux faits déduits : ");
-    afficherPropositions(nouveauxFaits);
+    // Affichage de toutes les règles de la base de connaissances
+    printf("Base de connaissances après ajout de 3 règles :\n");
+    afficherRegle(baseConnaissances.regles);
 
     // Libération de la mémoire
-    free(faits);
-    free(nouveauxFaits);
+    libererBC(baseConnaissances);
 
     return 0;
 }
